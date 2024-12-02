@@ -1,0 +1,15 @@
+{
+  "users":[
+    {
+      "id": 0,
+      "nome": "arthu",
+      "e-mail": "et",
+      "cookies":[0,12,23]
+    }
+  ],
+  "cookie":[
+    {
+      "id" : "123-0"
+    }
+  ]
+}
