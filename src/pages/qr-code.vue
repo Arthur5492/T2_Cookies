@@ -47,12 +47,12 @@
 
       stopScanner() {
         if (this.html5QrcodeScanner) {
-          this.html5QrcodeScanner.clear(); // Libera a câmera e limpa o scanner
+          this.html5QrcodeScanner.clear();
           console.log("Camera stopped.");
         }
       },
     },
-    
+
     mounted() {
         // Inicializa o scanner automaticamente ao carregar o componente
         this.initializeScanner();

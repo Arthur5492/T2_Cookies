@@ -31,7 +31,7 @@
     </f7-popup>
 
     <!-- Login -->
-    <f7-login-screen id="my-login-screen">
+    <f7-login-screen id="my-login">
       <f7-view>
         <f7-page login-screen>
           <f7-login-screen-title>Login</f7-login-screen-title>
