@@ -59,46 +59,17 @@
       </f7-view>
     </f7-login-screen>
 
-    <!-- QR Code -->
-    <f7-popup id="qr-code">
-      <div id="reader" style="width:600px"></div>
-      <div id="reader-results"></div>
-      <button @click="scan">Scan</button>
-    </f7-popup>
-
 </f7-app>
 </template>
 
 <script>
 
-  import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode";
   import { ref, onMounted } from 'vue';
   import { f7, f7ready } from 'framework7-vue';
 
   import routes from '../js/routes.js';
 
   export default {
-    scan() {
-      const onScanSuccess = (decodedText, decodedResult) => {
-        console.log(`Code matched = ${decodedText}`, decodedResult);
-
-        const resultsContainer = document.getElementById("reader-results");
-        resultsContainer.innerHTML = `<p><strong>Resultado:</strong> ${decodedText}</p>`;
-      };
-
-      const onScanFailure = (error) => {
-        console.warn(`Code scan error = ${error}`);
-      };
-
-      const html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: { width: 300, height: 300 }, formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] },
-        /* verbose= */ false
-      );
-
-      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-    },
-
     setup() {
 
       // Framework7 Parameters

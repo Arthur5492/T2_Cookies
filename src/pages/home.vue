@@ -13,12 +13,14 @@
 
     <!-- Page content-->
     <f7-block>
-      <p>Here is your blank Framework7 app. Let's see what we have here.</p>
+      <p>Sorteio o pinto na cara da sua mamãe</p>
     </f7-block>
+
     <f7-block-title>Navigation</f7-block-title>
     <f7-list strong inset dividersIos>
       <f7-list-item link="/about/" title="About"></f7-list-item>
-      <f7-list-item link="/form/" title="Form"></f7-list-item>
+      <f7-list-item link="/profile/" title="Profile"></f7-list-item>
+      <f7-list-item link="/qr-code/" title="QR Code"></f7-list-item>
     </f7-list>
 
     <f7-block-title>Modals</f7-block-title>

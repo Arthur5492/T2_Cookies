@@ -1,8 +1,9 @@
 
 import NotFoundPage from '../pages/404.vue';
 import AboutPage from '../pages/about.vue';
-import FormPage from '../pages/form.vue';
+import ProfilePage from '../pages/profile.vue';
 import HomePage from '../pages/home.vue';
+import QRCodePage from '../pages/qr-code.vue';
 
 var routes = [
   {
@@ -14,8 +15,12 @@ var routes = [
     component: AboutPage,
   },
   {
-    path: '/form/',
-    component: FormPage,
+    path: '/profile/',
+    component: ProfilePage,
+  },
+  {
+    path: '/qr-code/',
+    component: QRCodePage,
   },
   {
     path: '(.*)',
