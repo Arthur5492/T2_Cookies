@@ -1,16 +1,6 @@
 <template>
   <f7-app v-bind="f7params">
 
-  <!-- Left panel with cover effect-->
-  <f7-panel left cover dark>
-    <f7-view>
-      <f7-page>
-        <f7-navbar title="Left Panel"></f7-navbar>
-        <f7-block>Left panel content goes here</f7-block>
-      </f7-page>
-    </f7-view>
-  </f7-panel>
-
   <!-- Views/Tabs container -->
   <f7-views tabs class="safe-areas">
     <!-- Tabbar for switching views-tabs -->
@@ -47,6 +37,7 @@
       </f7-view>
     </f7-popup>
 
+    <!-- Login -->
     <f7-login-screen id="my-login-screen">
       <f7-view>
         <f7-page login-screen>
@@ -74,19 +65,47 @@
         </f7-page>
       </f7-view>
     </f7-login-screen>
+
+    <!-- QR Code -->
+    <f7-popup id="qr-code">
+      <div id="reader" style="width:600px"></div>
+      <div id="reader-results"></div>
+      <button @click="scan">Scan</button>
+    </f7-popup>
+
   </f7-app>
 </template>
 
 <script>
+
+  import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode";
   import { ref, onMounted } from 'vue';
   import { f7, f7ready } from 'framework7-vue';
-
-
   import routes from '../js/routes.js';
 
   export default {
-    setup() {
+    scan() {
+      const onScanSuccess = (decodedText, decodedResult) => {
+        console.log(`Code matched = ${decodedText}`, decodedResult);
 
+        const resultsContainer = document.getElementById("reader-results");
+        resultsContainer.innerHTML = `<p><strong>Resultado:</strong> ${decodedText}</p>`;
+      };
+
+      const onScanFailure = (error) => {
+        console.warn(`Code scan error = ${error}`);
+      };
+
+      const html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader",
+        { fps: 10, qrbox: { width: 300, height: 300 }, formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] },
+        /* verbose= */ false
+      );
+
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    },
+
+    setup() {
       // Framework7 Parameters
       const f7params = {
         name: 'Cookies Giveaway', // App name
@@ -111,11 +130,11 @@
           f7.loginScreen.close();
         });
       }
+
       onMounted(() => {
         f7ready(() => {
 
-
-          // Call F7 APIs here
+        // Call F7 APIs here
         });
       });
 
@@ -127,4 +146,14 @@
       }
     }
   }
+
 </script>
+
+<style>
+#reader-results {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+}
+</style>
