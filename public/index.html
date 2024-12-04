@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <title>Le QR Code</title>
+    <meta name="viewport" content="width=device-width">
+    <meta charset="UTF-8">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+
+<body>
+    <h1>oi</h1>
+    <div id="reader" style="width:600px"></div>
+    <div id="reader-results"></div>
+
+    <button onclick="scan()">scan</button>
+
+    <script>
+      function scan() {
+        function onScanSuccess(decodedText, decodedResult) {
+          console.log(`Code matched = ${decodedText}`, decodedResult);
+          
+          const resultsContainer = document.getElementById('reader-results');
+          resultsContainer.innerHTML = `<p><strong>Resultado:</strong> ${decodedText}</p>`;
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner (
+          "reader",
+          { fps: 10, qrbox: { width: 300, height: 300 }, formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] },
+          /* verbose= */ false);
+        
+        html5QrcodeScanner.render(onScanSuccess);
+      };
+
+    </script>
+</body>
+
+</html>

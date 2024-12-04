@@ -1,0 +1,18 @@
+{
+  "cwd": "/home/cyberdeb/trabalhos/cookies",
+  "type": [
+    "pwa"
+  ],
+  "name": "Cookies Giveaway",
+  "framework": "vue",
+  "template": "tabs",
+  "bundler": "vite",
+  "cssPreProcessor": false,
+  "theming": {
+    "customColor": true,
+    "color": "#46220f",
+    "darkMode": false,
+    "iconFonts": true
+  },
+  "customBuild": false
+}
