@@ -12,12 +12,12 @@ Framework7 app created with following options:
   ],
   "name": "Cookies Giveaway",
   "framework": "vue",
-  "template": "tabs",
+  "template": "single-view",
   "bundler": "vite",
   "cssPreProcessor": false,
   "theming": {
     "customColor": true,
-    "color": "#46220f",
+    "color": "#3b1e08",
     "darkMode": false,
     "iconFonts": true
   },

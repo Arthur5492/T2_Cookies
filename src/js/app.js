@@ -28,4 +28,3 @@ registerComponents(app);
 
 // Mount the app
 app.mount('#app');
-

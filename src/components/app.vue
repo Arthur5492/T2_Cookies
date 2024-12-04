@@ -1,37 +1,30 @@
 <template>
   <f7-app v-bind="f7params">
 
-  <!-- Views/Tabs container -->
-  <f7-views tabs class="safe-areas">
-    <!-- Tabbar for switching views-tabs -->
-    <f7-toolbar tabbar icons bottom>
-      <f7-link tab-link="#view-home" tab-link-active icon-ios="f7:house_fill" icon-md="material:home" text="Home"></f7-link>
-      <f7-link tab-link="#view-catalog" icon-ios="f7:square_list_fill" icon-md="material:view_list" text="Catalog"></f7-link>
-      <f7-link tab-link="#view-profile" icon-ios="f7:gear" icon-md="material:settings" text="Profile"></f7-link>
-    </f7-toolbar>
+  <!-- Left panel -->
+  <f7-panel left cover dark>
+    <f7-view>
+      <f7-page>
+        <f7-navbar title="Left Panel"></f7-navbar>
+        <f7-block>Left panel content goes here</f7-block>
+      </f7-page>
+    </f7-view>
+  </f7-panel>
 
-    <!-- Your main view/tab, should have "view-main" class. It also has "tab-active" class -->
-    <f7-view id="view-home" main tab tab-active url="/"></f7-view>
-
-    <!-- Catalog View -->
-    <f7-view id="view-catalog" name="catalog" tab url="/catalog/"></f7-view>
-
-    <!-- Profile View -->
-    <f7-view id="view-profile" name="profile" tab url="/profile/"></f7-view>
-
-  </f7-views>
+  <!-- Your main view, should have "view-main" class -->
+  <f7-view main class="safe-areas" url="/"></f7-view>
 
     <!-- Popup -->
     <f7-popup id="my-popup">
       <f7-view>
         <f7-page>
-          <f7-navbar title="Information">
+          <f7-navbar title="Popup">
             <f7-nav-right>
               <f7-link popup-close>Close</f7-link>
             </f7-nav-right>
           </f7-navbar>
           <f7-block>
-            <p>oi</p>
+            <p>Popup content goes here.</p>
           </f7-block>
         </f7-page>
       </f7-view>
@@ -46,20 +39,20 @@
             <f7-list-input
               type="text"
               name="username"
-              placeholder="Your name"
+              placeholder="Your username"
               v-model:value="username"
             ></f7-list-input>
             <f7-list-input
               type="password"
               name="password"
-              placeholder="Your Password"
+              placeholder="Your password"
               v-model:value="password"
             ></f7-list-input>
           </f7-list>
           <f7-list>
             <f7-list-button title="Sign In" @click="alertLoginData"></f7-list-button>
             <f7-block-footer>
-              oi
+              Some text about login information.<br>Click "Sign In" to close Login Screen
             </f7-block-footer>
           </f7-list>
         </f7-page>
@@ -73,7 +66,7 @@
       <button @click="scan">Scan</button>
     </f7-popup>
 
-  </f7-app>
+</f7-app>
 </template>
 
 <script>
@@ -81,6 +74,7 @@
   import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode";
   import { ref, onMounted } from 'vue';
   import { f7, f7ready } from 'framework7-vue';
+
   import routes from '../js/routes.js';
 
   export default {
@@ -106,12 +100,13 @@
     },
 
     setup() {
+
       // Framework7 Parameters
       const f7params = {
         name: 'Cookies Giveaway', // App name
         theme: 'auto', // Automatic theme detection
         colors: {
-          primary: '#46220f',
+          primary: '#3b1e08',
         },
         // App routes
         routes: routes,
@@ -130,11 +125,9 @@
           f7.loginScreen.close();
         });
       }
-
       onMounted(() => {
         f7ready(() => {
-
-        // Call F7 APIs here
+          // Call F7 APIs here
         });
       });
 
@@ -146,7 +139,6 @@
       }
     }
   }
-
 </script>
 
 <style>
