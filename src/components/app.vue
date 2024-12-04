@@ -11,25 +11,13 @@
     </f7-view>
   </f7-panel>
 
-
-  <!-- Right panel with reveal effect-->
-  <f7-panel right reveal dark>
-    <f7-view>
-      <f7-page>
-        <f7-navbar title="Right Panel"></f7-navbar>
-        <f7-block>Right panel content goes here</f7-block>
-      </f7-page>
-    </f7-view>
-  </f7-panel>
-
-
   <!-- Views/Tabs container -->
   <f7-views tabs class="safe-areas">
     <!-- Tabbar for switching views-tabs -->
     <f7-toolbar tabbar icons bottom>
       <f7-link tab-link="#view-home" tab-link-active icon-ios="f7:house_fill" icon-md="material:home" text="Home"></f7-link>
       <f7-link tab-link="#view-catalog" icon-ios="f7:square_list_fill" icon-md="material:view_list" text="Catalog"></f7-link>
-      <f7-link tab-link="#view-settings" icon-ios="f7:gear" icon-md="material:settings" text="Settings"></f7-link>
+      <f7-link tab-link="#view-profile" icon-ios="f7:gear" icon-md="material:settings" text="Profile"></f7-link>
     </f7-toolbar>
 
     <!-- Your main view/tab, should have "view-main" class. It also has "tab-active" class -->
@@ -38,23 +26,22 @@
     <!-- Catalog View -->
     <f7-view id="view-catalog" name="catalog" tab url="/catalog/"></f7-view>
 
-    <!-- Settings View -->
-    <f7-view id="view-settings" name="settings" tab url="/settings/"></f7-view>
+    <!-- Profile View -->
+    <f7-view id="view-profile" name="profile" tab url="/profile/"></f7-view>
 
   </f7-views>
-
 
     <!-- Popup -->
     <f7-popup id="my-popup">
       <f7-view>
         <f7-page>
-          <f7-navbar title="Popup">
+          <f7-navbar title="Information">
             <f7-nav-right>
               <f7-link popup-close>Close</f7-link>
             </f7-nav-right>
           </f7-navbar>
           <f7-block>
-            <p>Popup content goes here.</p>
+            <p>oi</p>
           </f7-block>
         </f7-page>
       </f7-view>
@@ -68,20 +55,20 @@
             <f7-list-input
               type="text"
               name="username"
-              placeholder="Your username"
+              placeholder="Your name"
               v-model:value="username"
             ></f7-list-input>
             <f7-list-input
               type="password"
               name="password"
-              placeholder="Your password"
+              placeholder="Your Password"
               v-model:value="password"
             ></f7-list-input>
           </f7-list>
           <f7-list>
             <f7-list-button title="Sign In" @click="alertLoginData"></f7-list-button>
             <f7-block-footer>
-              Some text about login information.<br>Click "Sign In" to close Login Screen
+              oi
             </f7-block-footer>
           </f7-list>
         </f7-page>
@@ -89,13 +76,13 @@
     </f7-login-screen>
   </f7-app>
 </template>
+
 <script>
   import { ref, onMounted } from 'vue';
   import { f7, f7ready } from 'framework7-vue';
 
 
   import routes from '../js/routes.js';
-  import store from '../js/store';
 
   export default {
     setup() {
@@ -107,11 +94,6 @@
         colors: {
           primary: '#46220f',
         },
-
-
-
-        // App store
-        store: store,
         // App routes
         routes: routes,
 
