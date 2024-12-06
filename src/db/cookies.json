@@ -1,8 +1,15 @@
-{
-"cookies":[
-    {
-      "cookie_id": 1230,
-      "name": "Cookie de Chocolate"
-    }
-  ]
-}
+[
+  {
+    "_id": "123-0",
+    "name": "Cookie de Chocolate"
+  },
+  {
+    "_id": "123-1",
+    "name": "Cookie de Morango"
+  },
+  {
+    "_id": "453-7",
+    "name": "Cookie de Baunilha"
+  }
+
+]

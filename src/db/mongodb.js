@@ -1,83 +1,116 @@
 import { MongoClient } from "mongodb";
+import fs from 'fs/promises';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import jwt from "jsonwebtoken";
 
-const client = new MongoClient('mongodb://127.0.0.1:27017')
-const dbName = "cookies-giveaway";
+const SECRET_KEY = "123";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const mongoURI = "mongodb://127.0.0.1:27017";
+const dbName = "COOKIES-GIVEAWAY";
 
 var db, users, cookies;
 
-export async function connect_db(){
+async function connect_db(){
+  const client = new MongoClient(mongoURI)
   await client.connect();
-  db = await client.db(dbName);
+  db = client.db(dbName);
   
-  users = await db.collection("users");
-  cookies = await db.collection("cookies");
+  users = db.collection("users");
+  cookies = db.collection("cookies");
 
+  console.log('Database connected');
+}
+
+async function crud_db(){
   try {
-    await populateUsers();
-    await populateCookies();
+    await populate_users();
+    await populate_cookies();
   }
   catch (error) {
-    console.log('error: ', error);
+    console.log('Error: ', error);
     throw error;
   }
 }
 
-export async function populateUsers() {
+async function populate_users() {
   try {
     const data = await fs.readFile(`${__dirname}/users.json`, 'utf8');
     let usersData = JSON.parse(data);
 
-    usersData = usersData.map(u => {
-      return {
-        name: u.name,
-        email: u.email,
-        cookie_ids: u.cookie_ids
-      };
-    });
-
     for (let user of usersData) {
-      await cadastrarProfessor(
-        user.name,
-        user.email,
-        user.cookie_ids,
+      await users.updateOne(
+        { _id: user._id }, // Filtro para encontrar o documento
+        { 
+          $set: {
+            name: user.name,
+            email: user.email,
+            password: user.password,
+            cookie_ids: user.cookie_ids
+          }
+        },
+        { upsert: true } // Cria o documento se não existir
       );
     }
-    console.log('users data ok');
+    console.log('Users data ok');
   } 
   catch (error) {
-    console.error('error users data', error);
+    console.error('Error users data:', error);
     throw error;
   }
 }
 
-export async function populateCookies() {
+async function populate_cookies() {
   try {
     const data = await fs.readFile(`${__dirname}/cookies.json`, 'utf8');
     let cookiesData = JSON.parse(data);
 
-    cookiesData = cookiesData.map(c => {
-      return {
-        cookie_id: c.name,
-        name: c.email,
-      };
-    });
-
     for (let cookie of cookiesData) {
-      await cadastrarProfessor(
-        cookie.cookie_id,
-        cookie.name,
+      await cookies.updateOne(
+        { _id: cookie._id }, // Filtro para encontrar o documento
+        { 
+          $set: {
+            cookie_id: cookie.cookie_id,
+            name: cookie.name,
+          }
+        },
+        { upsert: true } // Cria o documento se não existir
       );
     }
-    console.log('cookies data ok');
-  } 
+    console.log('Cookies data ok');
+  }
   catch (error) {
-    console.error('error cookies data', error);
+    console.error('Error cookies data: ', error);
     throw error;
   }
 }
 
 
-export async function update_profile(name, email, password, phone, gender, birthDate){
+
+async function sign_user(_id, name, email, cookie_ids) {
+  try {
+    await users.updateOne(
+      { _id: _id },
+      {
+        $set: {
+          name: name,
+          email: email,
+          cookie_ids: cookie_ids
+        }
+      },
+      { upsert: true }
+    );
+  } 
+  catch (error) {
+    console.error(`Error at user ${name}: `, error);
+    throw error;
+  }
+}
+
+async function update_profile(_id, name, email, password, phone, gender, birthDate){  
   if (name || email || password || phone || gender || birthDate){
     let fields = {};
 
@@ -89,7 +122,7 @@ export async function update_profile(name, email, password, phone, gender, birth
     if (birthDate) fields.birthDate = birthDate;
 
     const result = await users.updateOne(
-      { /* filtro para o usuário */ },
+      { _id: _id },
       { $set: fields },
       { upsert: true }
       )
@@ -98,24 +131,37 @@ export async function update_profile(name, email, password, phone, gender, birth
   }
 }
 
-export async function insert_cookie(cookie_id){
-  if (cookie_id){
-    const insertResult = await cookies.insertOne({_id: cookie_id});
-    const updateResult = await users.updateOne(
-      { /* filtro para o usuário */ },
-      { $addToSet: { cookie_ids: cookie_id } },
-      { upsert: true }
-      )
-    
-    return { insertResult, updateResult };
+async function giveaway() {
+  try {
+    // Seleciona um cookie aleatório usando $sample
+    const randomCookie = await cookies.aggregate([{ $sample: { size: 1 } }]).toArray();
+
+    if (randomCookie.length === 0) {
+      throw new Error("There are no cookies in cookies collection");
+    }
+
+    console.log("Giveaway Cookie:", randomCookie[0]);
+    return randomCookie[0];
+  } 
+  catch (error) {
+    console.error("Error at the giveaway:", error);
+    throw error;
   }
 }
 
-export async function giveaway(){
-  const randomCookie = await db.collection("cookies").aggregate([{ $sample: { size: 1 } }]).toArray();
-  console.log(randomCookie[0]); // Random Cookie
+function authenticate_token(req, res, next) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1];
 
-  // let id = await users.findOne( {cookie_id: randomCookie} );
-  // return id;
+  if (!token) return res.status(401).json({ success: false, message: "No token provided" });
 
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+    if (err) return res.status(403).json({ success: false, message: "Invalid token" });
+
+    req.user_id = user.id;
+    next();
+  });
 }
+
+
+export { users, cookies, connect_db, crud_db, sign_user, update_profile, giveaway, authenticate_token };

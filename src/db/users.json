@@ -1,9 +1,9 @@
-{
-  "users":[
-    {
-      "name": "arthu",
-      "email": "et",
-      "cookie_ids":[1230]
-    }
-  ]
-}
+[
+  {
+    "_id": 1,
+    "name": "arthu",
+    "email": "email",
+    "password": "123",
+    "cookie_ids":["123-0", "123-1", "453-7"]
+  }
+]

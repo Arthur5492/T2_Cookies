@@ -13,7 +13,7 @@
 
     <!-- Page content-->
     <f7-block>
-      <p>Sorteio o pinto na cara da sua mamãe</p>
+      <p>Sorteio pinto na cara da sua mamãe</p>
     </f7-block>
 
     <f7-block-title>Navigation</f7-block-title>
@@ -21,12 +21,12 @@
       <f7-list-item link="/about/" title="About"></f7-list-item>
       <f7-list-item link="/profile/" title="Profile"></f7-list-item>
       <f7-list-item link="/qr-code/" title="QR Code"></f7-list-item>
+      <f7-list-item link="/login/" title="Login"></f7-list-item>
     </f7-list>
 
     <f7-block-title>Modals</f7-block-title>
     <f7-block class="grid grid-cols-2 grid-gap">
       <f7-button fill popup-open="#my-popup">Popup</f7-button>
-      <f7-button fill login-screen-open="#my-login">Login</f7-button>
     </f7-block>
 
   </f7-page>
