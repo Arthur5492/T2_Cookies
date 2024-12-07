@@ -3,8 +3,10 @@ import fs from 'fs/promises';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import jwt from "jsonwebtoken";
+import dotenv from 'dotenv';
 
-const SECRET_KEY = "123";
+dotenv.config();
+const secretKey = process.env.SECRET_KEY;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,6 +29,7 @@ async function connect_db(){
 
 async function crud_db(){
   try {
+    await db.dropDatabase();
     await populate_users();
     await populate_cookies();
   }
@@ -49,6 +52,9 @@ async function populate_users() {
             name: user.name,
             email: user.email,
             password: user.password,
+            phone: user.phone,
+            gender: user.gender,
+            birth_date: user.birth_date,
             cookie_ids: user.cookie_ids
           }
         },
@@ -110,27 +116,6 @@ async function sign_user(_id, name, email, cookie_ids) {
   }
 }
 
-async function update_profile(_id, name, email, password, phone, gender, birthDate){  
-  if (name || email || password || phone || gender || birthDate){
-    let fields = {};
-
-    if (name) fields.name = name;
-    if (email) fields.email = email;
-    if (password) fields.password = password;
-    if (phone) fields.phone = phone;
-    if (gender) fields.gender = gender;
-    if (birthDate) fields.birthDate = birthDate;
-
-    const result = await users.updateOne(
-      { _id: _id },
-      { $set: fields },
-      { upsert: true }
-      )
-
-    return result;
-  }
-}
-
 async function giveaway() {
   try {
     // Seleciona um cookie aleatório usando $sample
@@ -155,8 +140,8 @@ function authenticate_token(req, res, next) {
 
   if (!token) return res.status(401).json({ success: false, message: "No token provided" });
 
-  jwt.verify(token, SECRET_KEY, (err, user) => {
-    if (err) return res.status(403).json({ success: false, message: "Invalid token" });
+  jwt.verify(token, secretKey, (err, user) => {
+    if (err) return res.status(403).json({ success: false, message: "Token expired" });
 
     req.user_id = user.id;
     next();
@@ -164,4 +149,4 @@ function authenticate_token(req, res, next) {
 }
 
 
-export { users, cookies, connect_db, crud_db, sign_user, update_profile, giveaway, authenticate_token };
+export { users, cookies, connect_db, crud_db, sign_user, giveaway, authenticate_token };

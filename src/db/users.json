@@ -4,6 +4,9 @@
     "name": "arthu",
     "email": "email",
     "password": "123",
+    "phone": "9",
+    "gender": "M",
+    "birth_date": "2003-12-10",
     "cookie_ids":["123-0", "123-1", "453-7"]
   }
 ]

@@ -1,13 +1,15 @@
-import { users, cookies, connect_db, crud_db, update_profile, giveaway, authenticate_token } from './src/db/mongodb.js';
+import { users, cookies, connect_db, crud_db, giveaway, authenticate_token } from './src/db/mongodb.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import bodyParser from "body-parser";
 import express from 'express';
 import cors from 'cors';
 import jwt from "jsonwebtoken";
+import dotenv from 'dotenv';
 
-const SECRET_KEY = "123";
-const PORT = 3000;
+dotenv.config();
+const port = process.env.PORT;
+const secretKey = process.env.SECRET_KEY;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -49,46 +51,96 @@ app.post('/login', async (req, res) => {
 
   try {
     const user = await users.findOne({ email, password });
-    if (user) {
-      const token = jwt.sign({ id: user._id }, SECRET_KEY, { expiresIn: "1h" });
-      console.log("Token saved", token);
-
-      res.status(200).json({ success: true, message: "Login success", user, token });
+    if (!user) {      
+      return res.status(401).json({ success: false, message: "Login failed" });
     } 
-    else {
-      res.status(401).json({ success: false, message: "Login failed" });
-    }
+
+    const token = jwt.sign({ id: user._id }, secretKey, { expiresIn: "1h" });
+    return res.status(200).json({ success: true, message: "Login success", user, token });
   } 
   catch (error) {
     console.error("Error on finding user:", error);
-    res.status(500).json({ success: false });
-    throw error;
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
-
-  res.send();
 });
 
 app.post("/api/insert_cookie", authenticate_token, async (req, res) => {
-  const { cookie_id } = req.body;
+  const { cookie_id, user_id } = req.body;
 
   try {
-    const user = await users.findOne({ _id: req.user_id });
+    // Check if cookie is already in the db
+    const existingCookie = await cookies.findOne({ _id: cookie_id });
+    if (existingCookie) {
+      return res.status(409).json({ success: false, message: "This cookie has been already added" });
+    }
+
+    const user = await users.findOne({ _id: user_id });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Insert cookie e and update user cookies
     const insertResult = await cookies.insertOne({ _id: cookie_id });
     const updateResult = await users.updateOne(
-      { _id: req.user_id },
+      { _id: user_id },
       { $addToSet: { cookie_ids: cookie_id } }
     );
-
-    res.status(200).json({ success: true, insertResult, updateResult });
-  } catch (error) {
+    return res.status(200).json({ success: true, message: "Cookie added", insertResult, updateResult });
+  } 
+  catch (error) {
     console.error("Error on insert cookie:", error);
-    res.status(500).json({ success: false });
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
+app.post("/api/update_profile", authenticate_token, async (req, res) => {
+  const { name, email, password, phone, gender, birth_date } = req.body;
+
+  try {
+    const user = await users.findOne({ _id: req.user_id });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    let fields = {};
+    if (name) fields.name = name;
+    if (email) fields.email = email;
+    if (password) fields.password = password;
+    if (phone) fields.phone = phone;
+    if (gender) fields.gender = gender;
+    if (birth_date) fields.birth_date = birth_date;
+
+    const updateResult = await users.updateOne(
+      { _id: user._id },
+      { $set: fields },
+      { upsert: true }
+    );
+    return res.status(200).json({ success: true, message: "Profile updated", updateResult});
+  } 
+  catch (error) {
+    console.error("Error on updating profile:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+app.post("/api/get_user_data", authenticate_token, async (req, res) => {
+  try {
+    const user = await users.findOne({ _id: req.user_id });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    return res.status(200).json({ success: true, message: "Data fetched", user});
+  } 
+  catch (error) {
+    console.error("Error fetching user data:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+  
 
 
-app.listen(PORT, function() {
+
+app.listen(port, function() {
     console.log('Server running on 3000');
 });
 

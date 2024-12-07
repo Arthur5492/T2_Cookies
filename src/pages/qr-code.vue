@@ -1,89 +1,99 @@
 <template>
-    <f7-page name="qr-code">
-      <f7-navbar title="QR Code" back-link="Back"></f7-navbar>
-      <f7-block-title>Scan your QR Code</f7-block-title>
-      <f7-block>
-        <div id="reader" style="width:600px;"></div>
-        <div id="reader-results"></div>
-      </f7-block>
-    </f7-page>
-  </template>
+  <f7-page name="qr-code">
+    <f7-navbar title="QR Code" back-link="Back"></f7-navbar>
+    <f7-block-title>Scan your QR Code</f7-block-title>
+    <f7-block>
+      <div id="reader" style="width:600px;"></div>
+    </f7-block>
+  </f7-page>
+</template>
   
-  <script>
-  import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode";
-  import { f7 } from 'framework7-vue';
-  import { insert_cookie_api } from "../js/functions";
-  
-  export default {
-    setup() {
-      return {
-        html5QrcodeScanner: null,
-      };
-    },
-    
-    methods: {
-      initializeScanner() {
-        if (!this.html5QrcodeScanner) {
-          this.html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader",
+<script>
+import { Html5Qrcode } from "html5-qrcode";
+import { f7 } from "framework7-vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import { insert_cookie_api } from "../js/functions";
+
+export default {
+  setup() {
+    const html5Qrcode = ref(null);
+    const cooldown = ref(false);
+
+    const initializeScanner = () => {
+      if (!html5Qrcode.value) {
+        html5Qrcode.value = new Html5Qrcode("reader");
+        html5Qrcode.value
+          .start(
+            { facingMode: "environment" }, // or "user"
             {
               fps: 10,
               qrbox: { width: 300, height: 300 },
-              formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
             },
-            /* verbose= */ false
-          );
-  
-          this.html5QrcodeScanner.render(this.onScanSuccess);
+            onScanSuccess
+          )
+          .catch((err) => {
+            console.error("Error starting scanner:", err);
+          });
+      } else {
+        console.log("Scanner already initialized.");
+      }
+    };
+
+    const onScanSuccess = async (decodedText) => {
+      if (cooldown.value) return;
+
+      console.log(`Code matched = ${decodedText}`);
+      cooldown.value = true;
+
+      try {
+        const response = await insert_cookie_api(decodedText);
+
+        if (response) {
+          f7.dialog.alert("Cookie submitted!");
         } 
         else {
-          console.log("Scanner already initialized.");
+          f7.dialog.alert("An unexpected error occurred.");
         }
-      },
+      } 
+      catch (error) {
+        console.error("Error at submitting cookie:", error);
+        f7.dialog.alert(error);
+      } 
+      finally {
+        setTimeout(() => {
+          cooldown.value = false;
+        }, 2000);
+      }
+    };
 
-      async onScanSuccess(decodedText, decodedResult) {
-        const cookie_id = decodedText;
-        console.log(`Code matched = ${cookie_id}`);
+    const stopScanner = () => {
+      if (html5Qrcode.value) {
+        html5Qrcode.value
+          .stop()
+          .then(() => {
+            console.log("Scanner stopped.");
+          })
+          .catch((err) => {
+            console.error("Error stopping scanner:", err);
+          });
+      }
+    };
 
-        try {
-          const response = await insert_cookie_api(cookie_id);
-          const data = await response.json();
+    onMounted(() => {
+      initializeScanner();
+    });
 
-          if (response.ok) {
-            f7.dialog.alert('Cookie submited!');
-            f7.loginScreen.close();
-          } 
-          else {
-            console.log(data);
-            f7.dialog.alert('An unexpected error occurred.');
-          }
-        } 
-        catch (error) {
-          console.error('Error at submiting cookie:', error);
-          f7.dialog.alert('Error connecting to server.');
-        }
+    onBeforeUnmount(() => {
+      stopScanner();
+    });
 
-        const resultsContainer = document.getElementById("reader-results");
-        resultsContainer.innerHTML = `<p><strong>Resultado:</strong> ${decodedText}</p>`;
-      },
-
-      stopScanner() {
-        if (this.html5QrcodeScanner) {
-          this.html5QrcodeScanner.clear();
-          console.log("Camera stopped.");
-        }
-      },
-    },
-
-    mounted() {
-        // Inicializa o scanner automaticamente ao carregar o componente
-        this.initializeScanner();
-    },
-    
-    beforeDestroy() {
-        // Para o scanner quando o componente é destruído
-        this.stopScanner();
-    },
-  };
-  </script>
+    return {
+      html5Qrcode,
+      cooldown,
+      initializeScanner,
+      stopScanner,
+    };
+  },
+};
+</script>
   
