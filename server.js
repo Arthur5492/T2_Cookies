@@ -6,10 +6,15 @@ import express from 'express';
 import cors from 'cors';
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv';
+import webpush from 'web-push';
+import { readFile } from 'fs/promises';
+
+const keys = JSON.parse(await readFile('./keys.json', 'utf8'));
 
 dotenv.config();
 const port = process.env.PORT;
 const secretKey = process.env.SECRET_KEY;
+const subject = process.env.SUBJECT; 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,8 +25,91 @@ app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.json());
 
 app.use(cors({
-  origin: 'http://localhost:5173', // Permite requisições da origem do frontend
+  origin: 'http://localhost:5173', // Allow frontend requisitions
 }));
+
+
+
+webpush.setVapidDetails(subject, keys.publicKey, keys.privateKey);
+
+app.post('/subscribe', authenticate_token, (req, res) => {
+  const subscription = req.body;
+
+  if (!subscription) {
+    return res.status(400).json({ success: false, message: "Subscription data missing" });
+  }
+
+  try {
+    const userId = req.userId; // ID do usuário autenticado
+    users.updateOne(
+      { _id: userId },
+      { $addToSet: { pushSubscriptions: subscription } } // Adiciona o pushSubscription ao usuário
+    );
+
+    res.status(201).json({ success: true, message: "Subscription saved" });
+  } catch (error) {
+    console.error("Erro ao salvar inscrição:", error);
+    res.status(500).json({ success: false, message: "Error at server" });
+  }
+});
+
+app.post("/validate-token", authenticate_token, (req, res) => {
+  res.status(200).json({ success: true, userId: req.userId });
+});
+
+
+app.post('/validate-subscription', async (req, res) => {
+  const subscription = req.body;
+
+  try {
+    const user = await users.findOne({ 
+      "pushSubscriptions.endpoint": subscription.endpoint,
+      "pushSubscriptions.keys.auth": subscription.keys.auth,
+      "pushSubscriptions.keys.p256dh": subscription.keys.p256dh,
+    });
+
+    if (user) {
+      console.log("Subscription belongs to user:", user);
+      res.status(200).json({ success: true, user });
+    } else {
+      console.warn("Subscription not found in the database");
+      res.status(404).json({ success: false, message: "Subscription not found" });
+    }
+  } catch (error) {
+    console.error("Error validating subscription:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post("/api/send-notification", async (req, res) => {
+  const { userId, message } = req.body;
+
+  try {
+    // Busca o usuário no banco de dados
+    const user = await users.findOne({ _id: userId });    
+    if (!user || !user.pushSubscriptions || user.pushSubscriptions.length === 0) {
+      return res.status(404).json({ error: 'Subscription not found for user.' });
+    }
+
+    // Pegue a primeira subscrição (ou personalize a lógica para pegar a correta)
+    const subscription = user.pushSubscriptions[0];
+
+    const payload = JSON.stringify({
+      title: "Notification Title",
+      body: message,
+    });
+
+    // Envie a notificação
+    await webpush.sendNotification(subscription, payload);
+
+    res.status(200).json({ success: true, message: "Notification sent!" });
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    res.status(500).json({ error: "Error at sending notification" });
+  }
+});
+
+
 
 
 
@@ -44,8 +132,6 @@ app.get('/api/giveaway', function(req, res) {
   res.send();
 });
 
-
-
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -59,13 +145,13 @@ app.post('/login', async (req, res) => {
     return res.status(200).json({ success: true, message: "Login success", user, token });
   } 
   catch (error) {
-    console.error("Error on finding user:", error);
+    console.error("Error at finding user:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
-app.post("/api/insert_cookie", authenticate_token, async (req, res) => {
-  const { cookie_id, user_id } = req.body;
+app.post("/api/insert-cookie", authenticate_token, async (req, res) => {
+  const { cookie_id } = req.body;
 
   try {
     // Check if cookie is already in the db
@@ -73,8 +159,9 @@ app.post("/api/insert_cookie", authenticate_token, async (req, res) => {
     if (existingCookie) {
       return res.status(409).json({ success: false, message: "This cookie has been already added" });
     }
-
-    const user = await users.findOne({ _id: user_id });
+    
+    const userId = req.userId;
+    const user = await users.findOne({ _id: userId });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -82,22 +169,23 @@ app.post("/api/insert_cookie", authenticate_token, async (req, res) => {
     // Insert cookie e and update user cookies
     const insertResult = await cookies.insertOne({ _id: cookie_id });
     const updateResult = await users.updateOne(
-      { _id: user_id },
+      { _id: userId },
       { $addToSet: { cookie_ids: cookie_id } }
     );
     return res.status(200).json({ success: true, message: "Cookie added", insertResult, updateResult });
   } 
   catch (error) {
-    console.error("Error on insert cookie:", error);
+    console.error("Error at inserting cookie:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
-app.post("/api/update_profile", authenticate_token, async (req, res) => {
+app.post("/api/update-profile", authenticate_token, async (req, res) => {
   const { name, email, password, phone, gender, birth_date } = req.body;
+  const userId = req.userId;
 
   try {
-    const user = await users.findOne({ _id: req.user_id });
+    const user = await users.findOne({ _id: userId });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -118,14 +206,15 @@ app.post("/api/update_profile", authenticate_token, async (req, res) => {
     return res.status(200).json({ success: true, message: "Profile updated", updateResult});
   } 
   catch (error) {
-    console.error("Error on updating profile:", error);
+    console.error("Error at updating profile:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
-app.post("/api/get_user_data", authenticate_token, async (req, res) => {
+app.post("/api/get-user-data", authenticate_token, async (req, res) => {
   try {
-    const user = await users.findOne({ _id: req.user_id });
+    const userId = req.userId;
+    const user = await users.findOne({ _id: userId });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -135,6 +224,42 @@ app.post("/api/get_user_data", authenticate_token, async (req, res) => {
     console.error("Error fetching user data:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
+});
+
+app.post("/api/sign-up", async (req, res) => {
+  const { name, email, password, phone, gender, birth_date } = req.body;
+
+  try {
+    // Valida se todos os campos obrigatórios foram fornecidos
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    // Verifica se o email já está registrado
+    const existingUser = await users.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ success: false, message: "Email already in use" });
+    }
+
+    // Cria o novo usuário
+    const newUser = {
+      name,
+      email,
+      password,
+      phone,
+      gender,
+      birth_date,
+    };
+
+    const result = await users.insertOne(newUser);
+    return res.status(201).json({ success: true, message: "User created successfully", userId: result.insertedId });
+  }
+  catch (error) {
+    console.error("Error at signing up:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+
+  }
+
 });
   
 

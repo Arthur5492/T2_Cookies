@@ -22,6 +22,7 @@
       <f7-list-item link="/profile/" title="Profile"></f7-list-item>
       <f7-list-item link="/qr-code/" title="QR Code"></f7-list-item>
       <f7-list-item link="/login/" title="Login"></f7-list-item>
+      <f7-list-item link="/cookies/" title="Cookies"></f7-list-item>
     </f7-list>
 
     <f7-block-title>Modals</f7-block-title>

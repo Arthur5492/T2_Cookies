@@ -18,6 +18,7 @@
       </f7-list>
       <f7-list>
         <f7-list-button title="Save" @click="updateProfile"></f7-list-button>
+        <f7-list-button title="Log out" @click="handleLogout"></f7-list-button>
       </f7-list>
     </f7-block>
   </f7-page>
@@ -81,6 +82,12 @@ export default {
       }
     };
 
+    const handleLogout = async () => {
+      localStorage.removeItem('token');
+      f7.views.main.router.navigate('/login/');
+      console.log("User logged out and token removed");
+    };
+
     onMounted(() => {
       fetchUserData();
     });
@@ -92,8 +99,9 @@ export default {
       phone,
       gender,
       birth_date,
-      updateProfile
+      updateProfile,
+      handleLogout
     };
-  },
+  }
 };
 </script>

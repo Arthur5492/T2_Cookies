@@ -1,16 +1,17 @@
 <template>
   <f7-page name="login">
-    <f7-navbar title="Login" back-link="Back"></f7-navbar>
+    <f7-navbar title="Login"></f7-navbar>
 
     <f7-block-title>Login into your account</f7-block-title>
     <f7-block>
       <f7-login-screen-title>Login</f7-login-screen-title>
       <f7-list form>
-        <f7-list-input type="text" name="email" placeholder="Your email" v-model:value="email"></f7-list-input>
+        <f7-list-input type="text" name="email" placeholder="Your email" v-model:value="email" ></f7-list-input>
         <f7-list-input type="password" name="password" placeholder="Your password" v-model:value="password"></f7-list-input>
       </f7-list>
       <f7-list>
-        <f7-list-button title="Sign In" @click="handleLogin"></f7-list-button>
+        <f7-list-button title="Log In" @click="handleLogin"></f7-list-button>
+        <f7-list-button title="Sign Up" @click="handleSignup"></f7-list-button>
       </f7-list>
     </f7-block>
   </f7-page>
@@ -32,7 +33,7 @@ export default {
 
         if (response) {
           f7.dialog.alert("Login success!");
-          f7.loginScreen.close();
+          f7.views.main.router.navigate('/home/');
         } 
         else {
           f7.dialog.alert("An unexpected error occurred.");
@@ -45,10 +46,15 @@ export default {
       }
     };
 
+    const handleSignup = () => {
+      f7.views.main.router.navigate('/signup/');
+    }
+
     return {
       email,
       password,
-      handleLogin
+      handleLogin,
+      handleSignup
     }
   }
 };

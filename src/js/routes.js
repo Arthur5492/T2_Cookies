@@ -5,10 +5,22 @@ import ProfilePage from '../pages/profile.vue';
 import HomePage from '../pages/home.vue';
 import QRCodePage from '../pages/qr-code.vue';
 import LoginPage from '../pages/login.vue';
+import CookiesPage from '../pages/cookies.vue';
+import SignupPage from '../pages/signup.vue';
+
+var initPage = LoginPage;
+const token = localStorage.getItem('token');
+if (token) {
+  initPage = HomePage;
+}
 
 var routes = [
   {
     path: '/',
+    component: initPage,
+  },
+  {
+    path: '/home/',
     component: HomePage,
   },
   {
@@ -26,6 +38,14 @@ var routes = [
   {
     path: '/login/',
     component: LoginPage,
+  },
+  {
+    path: '/signup/',
+    component: SignupPage,
+  },
+  {
+    path: '/cookies/',
+    component: CookiesPage,
   },
   {
     path: '(.*)',

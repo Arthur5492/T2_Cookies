@@ -44,24 +44,18 @@ async function populate_users() {
     const data = await fs.readFile(`${__dirname}/users.json`, 'utf8');
     let usersData = JSON.parse(data);
 
+    // Itera sobre cada usuário no JSON
     for (let user of usersData) {
+      const { email, ...userData } = user;
+
+      // Atualiza ou insere o usuário no banco
       await users.updateOne(
-        { _id: user._id }, // Filtro para encontrar o documento
-        { 
-          $set: {
-            name: user.name,
-            email: user.email,
-            password: user.password,
-            phone: user.phone,
-            gender: user.gender,
-            birth_date: user.birth_date,
-            cookie_ids: user.cookie_ids
-          }
-        },
-        { upsert: true } // Cria o documento se não existir
+        { email }, // Encontra o usuário pelo e-mail
+        { $set: userData }, // Define os dados do usuário
+        { upsert: true } // Cria o documento se ele não existir
       );
     }
-    console.log('Users data ok');
+    console.log('Users data populated successfully');
   } 
   catch (error) {
     console.error('Error users data:', error);
@@ -86,7 +80,7 @@ async function populate_cookies() {
         { upsert: true } // Cria o documento se não existir
       );
     }
-    console.log('Cookies data ok');
+    console.log('Cookies data populated successfully');
   }
   catch (error) {
     console.error('Error cookies data: ', error);
@@ -94,27 +88,6 @@ async function populate_cookies() {
   }
 }
 
-
-
-async function sign_user(_id, name, email, cookie_ids) {
-  try {
-    await users.updateOne(
-      { _id: _id },
-      {
-        $set: {
-          name: name,
-          email: email,
-          cookie_ids: cookie_ids
-        }
-      },
-      { upsert: true }
-    );
-  } 
-  catch (error) {
-    console.error(`Error at user ${name}: `, error);
-    throw error;
-  }
-}
 
 async function giveaway() {
   try {
@@ -126,7 +99,9 @@ async function giveaway() {
     }
 
     console.log("Giveaway Cookie:", randomCookie[0]);
-    return randomCookie[0];
+
+    const user = await users.findOne({ cookie_ids: { $in: [randomCookie[0]] } });
+    return user._id;
   } 
   catch (error) {
     console.error("Error at the giveaway:", error);
@@ -143,10 +118,10 @@ function authenticate_token(req, res, next) {
   jwt.verify(token, secretKey, (err, user) => {
     if (err) return res.status(403).json({ success: false, message: "Token expired" });
 
-    req.user_id = user.id;
+    req.userId = user.id;
     next();
   });
 }
 
 
-export { users, cookies, connect_db, crud_db, sign_user, giveaway, authenticate_token };
+export { users, cookies, connect_db, crud_db, giveaway, authenticate_token };

@@ -8,17 +8,11 @@ async function login_api(email, password) {
 
     if (!response.ok) {
       const errorData = await response.json();
-
-      if (response.status === 401) {
-        throw new Error(response.message);
-      } 
-      else {
-        throw new Error(errorData.message || "An unexpected error occurred.");
-      }
+      throw new Error(errorData.message || "Error at loging in");
     }
 
     const data = await response.json();
-    console.log("Login success", data);
+    console.log("Login success:", data);
     localStorage.setItem("token", data.token); // Storage token
     return data;
   } 
@@ -31,7 +25,7 @@ async function insert_cookie_api(cookie_id) {
   const token = localStorage.getItem("token");
 
   try {
-    const response = await fetch("http://localhost:3000/api/insert_cookie", {
+    const response = await fetch("http://localhost:3000/api/insert-cookie", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -42,19 +36,7 @@ async function insert_cookie_api(cookie_id) {
 
     if (!response.ok) {
       const errorData = await response.json();
-
-      if (response.status === 403) {
-        throw new Error(errorData.message);
-      } 
-      else if (response.status === 404) {
-        throw new Error(errorData.message);
-      }
-      else if (response.status === 409) {
-        throw new Error(errorData.message);
-      } 
-      else {
-        throw new Error(errorData.message || "An unexpected error occurred.");
-      }
+      throw new Error(errorData.message || "Error at inserting cookie");
     }
 
     const data = await response.json();
@@ -70,7 +52,7 @@ async function update_profile_api(name, email, password, phone, gender, birth_da
   const token = localStorage.getItem("token");
 
   try {
-    const response = await fetch("http://localhost:3000/api/update_profile", {
+    const response = await fetch("http://localhost:3000/api/update-profile", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -81,16 +63,7 @@ async function update_profile_api(name, email, password, phone, gender, birth_da
 
     if (!response.ok) {
       const errorData = await response.json();
-
-      if (response.status === 403) {
-        throw new Error(errorData.message);
-      } 
-      else if (response.status === 404) {
-        throw new Error(errorData.message);
-      } 
-      else {
-        throw new Error(errorData.message || "An unexpected error occurred.");
-      }
+      throw new Error(errorData.message || "Error at updating profile");
     }
 
     const data = await response.json();
@@ -106,7 +79,7 @@ async function get_user_data_api() {
   const token = localStorage.getItem("token");
 
   try {
-    const response = await fetch("http://localhost:3000/api/get_user_data", {
+    const response = await fetch("http://localhost:3000/api/get-user-data", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -116,16 +89,7 @@ async function get_user_data_api() {
 
     if (!response.ok) {
       const errorData = await response.json();
-
-      if (response.status === 403) {
-        throw new Error(errorData.message);
-      } 
-      else if (response.status === 404) {
-        throw new Error(errorData.message);
-      } 
-      else {
-        throw new Error(errorData.message || "An unexpected error occurred.");
-      }
+      throw new Error(errorData.message || "Error at fetching data");
     }
 
     const data = await response.json();
@@ -137,4 +101,39 @@ async function get_user_data_api() {
   }
 }
 
-export { login_api, insert_cookie_api, update_profile_api, get_user_data_api }
+async function sign_user_api(name, email, password, phone, gender, birth_date) {
+  try {
+    const response = await fetch("http://localhost:3000/api/sign-up", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        phone,
+        gender,
+        birth_date,
+      }),
+    });
+
+    // Verifica se a requisição foi bem-sucedida
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Error at signing up");
+    }
+
+    // Retorna os dados de resposta
+    const data = await response.json();
+    console.log("User successfully signed:", data);
+    localStorage.setItem("token", data.token); // Storage token
+    return data;
+  } 
+  catch (error) {
+    throw error;
+  }
+}
+
+
+export { login_api, insert_cookie_api, update_profile_api, get_user_data_api, sign_user_api }
