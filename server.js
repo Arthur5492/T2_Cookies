@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import dotenv from 'dotenv';
 import webpush from 'web-push';
 import { readFile } from 'fs/promises';
+import { ObjectId } from 'mongodb';
 
 const keys = JSON.parse(await readFile('./keys.json', 'utf8'));
 
@@ -32,7 +33,7 @@ app.use(cors({
 
 webpush.setVapidDetails(subject, keys.publicKey, keys.privateKey);
 
-app.post('/subscribe', authenticate_token, (req, res) => {
+app.post('/subscribe', authenticate_token, async (req, res) => {
   const subscription = req.body;
 
   if (!subscription) {
@@ -40,32 +41,49 @@ app.post('/subscribe', authenticate_token, (req, res) => {
   }
 
   try {
-    const userId = req.userId; // ID do usuário autenticado
-    users.updateOne(
-      { _id: userId },
-      { $addToSet: { pushSubscriptions: subscription } } // Adiciona o pushSubscription ao usuário
+    const userId = req.userId;
+    const objectId = new ObjectId(userId);
+    const updateResult = users.updateOne(
+      { _id: objectId },
+      { $addToSet: { pushSubscriptions: subscription } }, // Adiciona o pushSubscription ao usuário
     );
 
-    res.status(201).json({ success: true, message: "Subscription saved" });
-  } catch (error) {
+    if (updateResult) {
+      res.status(201).json({ success: true, message: "Subscription saved" });
+    }
+    else {
+      res.status(404).json({ success: false, message: "User not found or subscription already exists" });
+    }
+    } 
+  catch (error) {
     console.error("Erro ao salvar inscrição:", error);
     res.status(500).json({ success: false, message: "Error at server" });
   }
 });
 
 app.post("/validate-token", authenticate_token, (req, res) => {
-  res.status(200).json({ success: true, userId: req.userId });
+  const userId = req.userId;
+  const objectId = new ObjectId(userId);
+  res.status(200).json({ success: true, userId: objectId });
 });
-
 
 app.post('/validate-subscription', async (req, res) => {
   const subscription = req.body;
 
+  if (!subscription || !subscription.endpoint || !subscription.keys) {
+    return res.status(400).json({ success: false, message: "Invalid subscription data" });
+  }
+
   try {
-    const user = await users.findOne({ 
-      "pushSubscriptions.endpoint": subscription.endpoint,
-      "pushSubscriptions.keys.auth": subscription.keys.auth,
-      "pushSubscriptions.keys.p256dh": subscription.keys.p256dh,
+    // Busca o usuário com uma assinatura correspondente
+    const user = await users.findOne({
+      pushSubscriptions: {
+        $elemMatch: {
+          "endpoint": subscription.endpoint,
+          "keys.auth": subscription.keys.auth,
+          "keys.p256dh": subscription.keys.p256dh,
+        },
+      },
     });
 
     if (user) {
@@ -101,9 +119,9 @@ app.post("/api/send-notification", async (req, res) => {
 
     // Envie a notificação
     await webpush.sendNotification(subscription, payload);
-
     res.status(200).json({ success: true, message: "Notification sent!" });
-  } catch (error) {
+  } 
+  catch (error) {
     console.error("Error sending notification:", error);
     res.status(500).json({ error: "Error at sending notification" });
   }
@@ -161,7 +179,8 @@ app.post("/api/insert-cookie", authenticate_token, async (req, res) => {
     }
     
     const userId = req.userId;
-    const user = await users.findOne({ _id: userId });
+    const objectId = new ObjectId(userId);
+    const user = await users.findOne({ _id: objectId });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -183,9 +202,10 @@ app.post("/api/insert-cookie", authenticate_token, async (req, res) => {
 app.post("/api/update-profile", authenticate_token, async (req, res) => {
   const { name, email, password, phone, gender, birth_date } = req.body;
   const userId = req.userId;
+  const objectId = new ObjectId(userId);
 
   try {
-    const user = await users.findOne({ _id: userId });
+    const user = await users.findOne({ _id: objectId });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -214,7 +234,8 @@ app.post("/api/update-profile", authenticate_token, async (req, res) => {
 app.post("/api/get-user-data", authenticate_token, async (req, res) => {
   try {
     const userId = req.userId;
-    const user = await users.findOne({ _id: userId });
+    const objectId = new ObjectId(userId);
+    const user = await users.findOne({ _id: objectId });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }

@@ -73,7 +73,8 @@ async function subscribeToPushNotifications(registration, token) {
     });
 
     if (response.ok) {
-      console.log("User signed for push notifications");
+      const result = await response.json();
+      console.log("User signed for push notifications", result);
     } else {
       console.error("Error at registering on server:", await response.text());
     }
@@ -105,11 +106,16 @@ async function validateSubscription(registration) {
     if (response.ok) {
       const result = await response.json();
       console.log("Subscription validated successfully:", result);
-    } else {
+      return true;
+    } 
+    else {
       console.error("Failed to validate subscription:", await response.text());
+      return false;
     }
-  } catch (error) {
+  } 
+  catch (error) {
     console.error("Error validating subscription:", error);
+    return false;
   }
 }
 
@@ -139,13 +145,14 @@ async function initializePushNotifications() {
       console.log("Validating existing subscription...");
       const validationResponse = await validateSubscription(registration);
 
-      if (validationResponse?.success) {
-        console.log("Subscription validated successfully:", validationResponse);
+      if (validationResponse) {
         return; // Subscrição válida, não cria outra
-      } else {
+      } 
+      else {
         console.warn("Existing subscription is not valid. Proceeding to create a new one.");
       }
-    } else {
+    } 
+    else {
       console.log("No existing subscription found. Proceeding to create a new one.");
     }
 
