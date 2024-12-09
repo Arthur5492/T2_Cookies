@@ -24,10 +24,8 @@ const app = express();
 
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.json());
+app.use(cors()); // Allow frontend requisitions
 
-app.use(cors({
-  origin: 'http://localhost:5173', // Allow frontend requisitions
-}));
 
 
 
@@ -299,7 +297,7 @@ app.post("/api/sign-up", async (req, res) => {
 
 
 
-app.listen(port, function() {
+app.listen(port, '0.0.0.0', function() {
     console.log('Server running on 3000');
 });
 
