@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 
+// Exemplo: 
+// node push-cli.js --cookieId "123-0" --message "Parabens, voce foi sorteado na promocao dos produtos X, entre em contato para receber seu premio"
+
 import fetch from 'node-fetch';
 import yargs from 'yargs'; 
 
 const argv = yargs(process.argv.slice(2))
-  .usage('Usage: $0 --userId <userId> --message <message>')
-  .demandOption(['userId', 'message'])
+  .usage('Usage: $0 --cookieId <cookieId> --message <message>')
+  .demandOption(['cookieId', 'message'])
   .argv;
 
 // Obtenha os parâmetros da linha de comando
-const { userId, message } = argv;
+const { cookieId, message } = argv;
 
 // Enviar push notification
 async function sendNotification() {
@@ -19,7 +22,7 @@ async function sendNotification() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ userId, message }),
+      body: JSON.stringify({ cookieId, message }),
     });
 
     const result = await response.json();

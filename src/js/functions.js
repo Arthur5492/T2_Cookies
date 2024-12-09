@@ -21,7 +21,7 @@ async function login_api(email, password) {
   }
 }
 
-async function insert_cookie_api(cookie_id) {
+async function insert_cookie_api(cookieId) {
   const token = localStorage.getItem("token");
 
   try {
@@ -31,7 +31,7 @@ async function insert_cookie_api(cookie_id) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ cookie_id }),
+      body: JSON.stringify({ cookieId }),
     });
 
     if (!response.ok) {

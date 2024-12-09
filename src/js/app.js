@@ -90,7 +90,7 @@ async function validateSubscription(registration) {
 
     if (!subscription) {
       console.warn("No subscription found on this device.");
-      return;
+      return false;
     }
 
     console.log("Current subscription found:", subscription);

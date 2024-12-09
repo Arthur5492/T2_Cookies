@@ -44,7 +44,7 @@ app.post('/subscribe', authenticate_token, async (req, res) => {
     const userId = req.userId;
     const objectId = new ObjectId(userId);
     const updateResult = users.updateOne(
-      { _id: objectId },
+      { _id: objectId, "pushSubscriptions.endpoint": { $ne: subscription.endpoint } }, // Evita duplicatas
       { $addToSet: { pushSubscriptions: subscription } }, // Adiciona o pushSubscription ao usuário
     );
 
@@ -87,7 +87,7 @@ app.post('/validate-subscription', async (req, res) => {
     });
 
     if (user) {
-      console.log("Subscription belongs to user:", user);
+      // console.log("Subscription belongs to user:", user);
       res.status(200).json({ success: true, user });
     } else {
       console.warn("Subscription not found in the database");
@@ -100,20 +100,33 @@ app.post('/validate-subscription', async (req, res) => {
 });
 
 app.post("/api/send-notification", async (req, res) => {
-  const { userId, message } = req.body;
+  const { cookieId, message } = req.body;
 
   try {
-    // Busca o usuário no banco de dados
-    const user = await users.findOne({ _id: userId });    
-    if (!user || !user.pushSubscriptions || user.pushSubscriptions.length === 0) {
-      return res.status(404).json({ error: 'Subscription not found for user.' });
+    const user = await users.findOne({ cookie_ids: cookieId });    
+    if (!user) {
+      return res.status(404).json({ error: 'This cookieId does not exist at this giveaway' });
     }
 
-    // Pegue a primeira subscrição (ou personalize a lógica para pegar a correta)
-    const subscription = user.pushSubscriptions[0];
+    if (!user.pushSubscriptions || user.pushSubscriptions.length === 0) {
+      return res.status(404).json({ error: 'Subscription not found for user' });
+    }
+
+    // Valida a subscrição atual no dispositivo
+    const subscription = req.body.subscription;
+    const currentSubscription = user.pushSubscriptions.find(
+      sub =>
+        sub.endpoint === subscription.endpoint &&
+        sub.keys.auth === subscription.keys.auth &&
+        sub.keys.p256dh === subscription.keys.p256dh
+    );
+
+    if (!currentSubscription) {
+      return res.status(404).json({ error: 'Current subscription not found for user' });
+    }
 
     const payload = JSON.stringify({
-      title: "Notification Title",
+      title: "You won the giveaway!",
       body: message,
     });
 
@@ -169,11 +182,11 @@ app.post('/login', async (req, res) => {
 });
 
 app.post("/api/insert-cookie", authenticate_token, async (req, res) => {
-  const { cookie_id } = req.body;
+  const { cookieId } = req.body;
 
   try {
     // Check if cookie is already in the db
-    const existingCookie = await cookies.findOne({ _id: cookie_id });
+    const existingCookie = await cookies.findOne({ _id: cookieId });
     if (existingCookie) {
       return res.status(409).json({ success: false, message: "This cookie has been already added" });
     }
@@ -186,10 +199,10 @@ app.post("/api/insert-cookie", authenticate_token, async (req, res) => {
     }
 
     // Insert cookie e and update user cookies
-    const insertResult = await cookies.insertOne({ _id: cookie_id });
+    const insertResult = await cookies.insertOne({ _id: cookieId });
     const updateResult = await users.updateOne(
       { _id: userId },
-      { $addToSet: { cookie_ids: cookie_id } }
+      { $addToSet: { cookie_ids: cookieId } }
     );
     return res.status(200).json({ success: true, message: "Cookie added", insertResult, updateResult });
   } 
