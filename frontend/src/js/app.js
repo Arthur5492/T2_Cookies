@@ -87,41 +87,6 @@ async function subscribeToPushNotifications(registration, token) {
   }
 }
 
-// Validate an existing subscription
-async function validateSubscription(registration) {
-  try {
-    const subscription = await registration.pushManager.getSubscription();
-
-    if (!subscription) {
-      console.warn("No subscription found on this device.");
-      return false;
-    }
-
-    console.log("Current subscription found:", subscription);
-
-    const response = await fetch(`${BASE_URL}/validate-subscription`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(subscription),
-    });
-
-    if (response.ok) {
-      const result = await response.json();
-      console.log("Subscription validated successfully:", result);
-      return true;
-    } 
-    else {
-      console.error("Failed to validate subscription:", await response.text());
-      return false;
-    }
-  } 
-  catch (error) {
-    console.error("Error validating subscription:", error);
-    return false;
-  }
-}
 
 // Initialize Push Notifications
 async function initializePushNotifications() {
@@ -130,37 +95,16 @@ async function initializePushNotifications() {
     return;
   }
 
-  const token = localStorage.getItem("token");
-  if (!token) {
-    console.warn("No token found. Notifications won't be initialized.");
-    return;
-  }
-
-  const isTokenValid = await validateToken(token);
-  if (!isTokenValid) {
-    console.warn("Token validation failed. Notifications won't be initialized.");
-    return;
-  }
-
   navigator.serviceWorker.ready.then(async (registration) => {
     const subscription = await registration.pushManager.getSubscription();
 
     if (subscription) {
-      console.log("Validating existing subscription...");
-      const validationResponse = await validateSubscription(registration);
-
-      if (validationResponse) {
-        return; // Subscrição válida, não cria outra
-      } 
-      else {
-        console.warn("Existing subscription is not valid. Proceeding to create a new one.");
-      }
-    } 
-    else {
-      console.log("No existing subscription found. Proceeding to create a new one.");
+      console.log("Subscription found");
+      return; // Subscrição já existe, não precisa criar uma nova
     }
 
-    // Cria uma nova subscrição caso nenhuma válida seja encontrada
+    console.log("No existing subscription found. Proceeding to create a new one.");
+    const token = localStorage.getItem("token");
     await subscribeToPushNotifications(registration, token);
   });
 }
@@ -204,3 +148,10 @@ app.use(router);
 
 // Mount the app
 app.mount("#app");
+
+// Inicia notificações push após a montagem e validação do token
+router.afterEach((to) => {
+  if (to.meta.requiresAuth) {
+    initializePushNotifications();
+  }
+});

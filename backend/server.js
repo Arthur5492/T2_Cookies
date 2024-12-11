@@ -68,32 +68,6 @@ app.post("/validate-token", authenticate_token, (req, res) => {
   res.status(200).json({ success: true, userId: objectId });
 });
 
-app.post('/validate-subscription', authenticate_token, async (req, res) => {
-  const subscription = req.body;
-  const userId = req.userId;
-  const objectId = new ObjectId(userId);
-
-  if (!subscription || !subscription.endpoint || !subscription.keys) {
-    return res.status(400).json({ success: false, message: "Invalid subscription data" });
-  }
-
-  try {
-    const user = await users.findOne({ _id: objectId });
-
-    if (user) {
-      // console.log("Subscription belongs to user:", user);
-      res.status(200).json({ success: true, user });
-    } 
-    else {
-      console.warn("Subscription not found in the database");
-      res.status(404).json({ success: false, message: "Subscription not found" });
-    }
-  } catch (error) {
-    console.error("Error validating subscription:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
 app.post("/api/send-notification", async (req, res) => {
   const { cookieId, message } = req.body;
 
