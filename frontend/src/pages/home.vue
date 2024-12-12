@@ -17,6 +17,12 @@
 
     <div class="home-page-content">
 
+      <!-- Countdown Timer -->
+      <div class="countdown-container">
+        <span class="countdown-text">Time left: </span>
+        <span id="countdown-timer" class="countdown-timer"></span>
+      </div>
+
       <!-- QR Code Button -->
       <div class="qr-button-container">
         <f7-link href="/qr-code/" class="qr-button">
@@ -55,6 +61,51 @@
   </f7-page>
 </template>
 
+<script>
+import { send_notification_countdown_api, authenticate_api } from '../js/functions.js';
+import { ref, onMounted } from 'vue';
+
+export default {
+  setup() {
+    const countdownFlag = ref(false); // Flag to Countdown Timer
+    const countdownTime = ref(10); // Seconds
+  
+    const authenticateUser = async () => {
+      await authenticate_api(); // Apenas chama a função de autenticação
+    }
+
+    const startCountdown = () => {
+        const timerElement = document.getElementById("countdown-timer");
+        const countdownInterval = setInterval(() => {
+          if (countdownTime.value <= 0) {
+            clearInterval(countdownInterval);
+            triggerCountdownEvent();
+          } else {
+            countdownTime.value -= 1;
+            timerElement.textContent = formatTime(countdownTime.value);
+          }
+        }, 1000);
+      }
+
+    const formatTime = (seconds) => {
+      const minutes = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+      
+    const triggerCountdownEvent = async () => {
+      await send_notification_countdown_api();
+    }
+
+    onMounted(() => {
+      authenticateUser();
+      if (countdownFlag.value) startCountdown();
+    })
+
+  },
+};
+</script>
+
 <style scoped>
 .home-page-background {
   background-image: url('../assets/images/background-home.jpg');
@@ -72,6 +123,21 @@
   padding-top: 20px;
 }
 
+.countdown-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #9b5a28;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  max-width: 320px;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+}
+
 .qr-button-container {
   display: flex;
   justify-content: center;
@@ -82,7 +148,6 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   width: 80%;
   max-width: 320px;
-  cursor: pointer;
   transition: transform 0.2s ease;
 }
 
@@ -116,18 +181,4 @@
   max-width: 400px;
   margin: 0 auto;
 }
-
-.popup-right {
-  position: fixed;
-  top: 10%;
-  right: 10px;
-  width: 300px;
-  height: auto;
-  background-color: #312115;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  z-index: 1000;
-}
 </style>
-

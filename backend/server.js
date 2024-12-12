@@ -31,7 +31,7 @@ app.use(cors()); // Allow frontend requisitions
 
 webpush.setVapidDetails(subject, keys.publicKey, keys.privateKey);
 
-app.post('/subscribe', authenticate_token, async (req, res) => {
+app.post('/api/subscribe', authenticate_token, async (req, res) => {
   const subscription = req.body;
 
   if (!subscription) {
@@ -62,6 +62,20 @@ app.post('/subscribe', authenticate_token, async (req, res) => {
   }
 });
 
+app.post("/check-subscription", async (req, res) => {
+  const { subscription } = req.body;
+
+  try {
+    const isRegistered = await users.findOne({ "pushSubscription.endpoint": subscription.endpoint });
+
+    res.json({ isRegistered: !!isRegistered });
+  } catch (error) {
+    console.error("Error checking subscription in database:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 app.post("/validate-token", authenticate_token, (req, res) => {
   const userId = req.userId;
   const objectId = new ObjectId(userId);
@@ -70,6 +84,40 @@ app.post("/validate-token", authenticate_token, (req, res) => {
 
 app.post("/api/send-notification", async (req, res) => {
   const { cookieId, message } = req.body;
+
+  try {
+    // Procura o usuário pelo cookieId
+    const user = await users.findOne({ cookie_ids: cookieId });
+    if (!user) {
+      return res.status(404).json({ error: 'This cookieId does not exist at this giveaway' });
+    }
+
+    // Verifica se existe uma pushSubscription única
+    const subs = user.pushSubscription;
+    if (!subs || !subs.endpoint || !subs.keys) {
+      return res.status(404).json({ error: 'Subscription not found for user' });
+    }
+
+    // Monta o payload da notificação
+    const payload = JSON.stringify({
+      title: "You won the giveaway!",
+      body: message,
+    });
+
+    // Envia a notificação
+    await webpush.sendNotification(subs, payload);
+
+    // Responde com sucesso
+    res.status(200).json({ success: true, message: "Notification sent!" });
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    res.status(500).json({ error: "Error at sending notification" });
+  }
+});
+
+app.post("/send-notification-countdown", async (req, res) => {
+  const cookieId = await giveaway();
+  const message = "Você ganhou o sorteio!";
 
   try {
     // Procura o usuário pelo cookieId
@@ -221,7 +269,7 @@ app.post("/api/get-user-data", authenticate_token, async (req, res) => {
   }
 });
 
-app.post("/api/sign-up", async (req, res) => {
+app.post("/sign-up", async (req, res) => {
   const { name, email, password, phone, gender, birth_date } = req.body;
 
   try {
@@ -254,8 +302,18 @@ app.post("/api/sign-up", async (req, res) => {
     return res.status(500).json({ success: false, message: "Internal server error" });
 
   }
-
 });
+
+app.post("/api/authenticate", authenticate_token, async (req, res) => {
+  try {
+    res.status(200).json({ success: true, message: "Token is valid." });
+  } 
+  catch (error) {
+    console.error("Error in authentication:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
   
 
 

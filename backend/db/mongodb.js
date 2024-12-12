@@ -73,7 +73,6 @@ async function populate_cookies() {
         { _id: cookie._id }, // Filtro para encontrar o documento
         { 
           $set: {
-            cookie_id: cookie.cookie_id,
             name: cookie.name,
           }
         },
@@ -99,9 +98,7 @@ async function giveaway() {
     }
 
     console.log("Giveaway Cookie:", randomCookie[0]);
-
-    const user = await users.findOne({ cookie_ids: { $in: [randomCookie[0]] } });
-    return user._id;
+    return randomCookie[0]._id;
   } 
   catch (error) {
     console.error("Error at the giveaway:", error);

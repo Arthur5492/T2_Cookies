@@ -12,9 +12,6 @@
     "build": "cross-env NODE_ENV=production vite build",
     "build-assets": "cpy --flat ./node_modules/framework7-icons/fonts/*.* ./src/fonts/ && cpy --flat ./node_modules/material-icons/iconfont/*.* ./src/fonts/"
   },
-  "bin": {
-    "push-cli": "./push-cli.js"
-  },
   "browserslist": [
     "IOS >= 15",
     "Safari >= 15",

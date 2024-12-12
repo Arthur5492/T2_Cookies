@@ -57,7 +57,7 @@ async function subscribeToPushNotifications(registration, token) {
   });
 
   try {
-    const response = await fetch(`${BASE_URL}/subscribe`, {
+    const response = await fetch(`${BASE_URL}/api/subscribe`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -69,14 +69,42 @@ async function subscribeToPushNotifications(registration, token) {
     if (response.ok) {
       const result = await response.json();
       console.log("User signed for push notifications", result);
-    } else {
+    } 
+    else {
       console.error("Error at registering on server:", await response.text());
     }
-  } catch (error) {
+  } 
+  catch (error) {
     console.error("Error subscribing to push notifications:", error);
   }
 }
 
+// Check if subscription is at database
+async function verifySubscriptionInDatabase(subscription) {
+  try {
+    const response = await fetch(`${BASE_URL}/check-subscription`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ subscription }),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log("User subscription is at database", result);
+      return true;
+    }
+    else {
+      console.error("Failed to verify subscription in database:", await response.text());
+      return false;
+    }
+  } 
+  catch (error) {
+    console.error("Error verifying subscription in database:", error);
+    return false;
+  }
+}
 
 // Initialize Push Notifications
 async function initializePushNotifications() {
@@ -89,8 +117,14 @@ async function initializePushNotifications() {
     const subscription = await registration.pushManager.getSubscription();
 
     if (subscription) {
-      console.log("Subscription found");
-      return; // Subscrição já existe, não precisa criar uma nova
+      console.log("Subscription found. Verifying in the database...");
+
+      const isRegistered = await verifySubscriptionInDatabase(subscription);
+
+      if (isRegistered) {
+        console.log("Subscription is already registered in the database.");
+        return; // Subscrição válida, não precisa fazer nada.
+      }
     }
 
     console.log("No existing subscription found. Proceeding to create a new one.");
@@ -98,6 +132,7 @@ async function initializePushNotifications() {
     await subscribeToPushNotifications(registration, token);
   });
 }
+
 
 
 // Configuring PWA

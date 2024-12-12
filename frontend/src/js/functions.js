@@ -105,7 +105,7 @@ async function get_user_data_api() {
 
 async function sign_user_api(name, email, password, phone, gender, birth_date) {
   try {
-    const response = await fetch(`${BASE_URL}/api/sign-up`, {
+    const response = await fetch(`${BASE_URL}/sign-up`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -137,4 +137,61 @@ async function sign_user_api(name, email, password, phone, gender, birth_date) {
   }
 }
 
-export { login_api, insert_cookie_api, update_profile_api, get_user_data_api, sign_user_api }
+async function send_notification_countdown_api() {
+  try {
+    const response = await fetch(`${BASE_URL}/send-notification-countdown`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log('Notification sent successfully:', result);
+    } 
+    else {
+      console.error('Error sending notification:', result);
+    }
+  } 
+  catch (error) {
+    console.error('Failed to send notification:', error);
+  }
+}
+
+async function authenticate_api() {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.warn("No token found. Redirecting to login...");
+      router.push("/login/");
+      return;
+    }
+
+    const response = await fetch(`${BASE_URL}/api/authenticate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log('Authentication successful', result);
+    } 
+    else {
+      console.error('Authentication failed. Redirecting to login...', result);
+      localStorage.removeItem("token");
+      router.push("/login/");
+    }
+  } 
+  catch (error) {
+    console.error("Error during authentication:", error);
+    router.push("/login/");  }
+}
+
+export { login_api, insert_cookie_api, update_profile_api, get_user_data_api, sign_user_api, send_notification_countdown_api, authenticate_api }
