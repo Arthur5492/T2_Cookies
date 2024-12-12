@@ -23,30 +23,20 @@ import BASE_URL from '../../config-url.js';
 // Router
 import router from './router.js';
 
-// Validate token with the server
-export default async function validateToken(token) {
-  try {
-    const response = await fetch(`${BASE_URL}/validate-token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+// Init Framework7-Vue Plugin
+Framework7.use(Framework7Vue);
 
-    if (response.ok) {
-      const result = await response.json();
-      console.log("Token validated successfully:", result);
-      return true;
-    } else {
-      console.error("Token validation failed:", await response.text());
-      return false;
-    }
-  } catch (error) {
-    console.error("Error validating token:", error);
-    return false;
-  }
-}
+// Init App
+const app = createApp(App);
+
+// Register Framework7 Vue components
+registerComponents(app);
+
+// Router
+app.use(router);
+
+// Mount the app
+app.mount("#app");
 
 // Function to convert base64 to Uint8Array
 function urlBase64ToUint8Array(base64String) {
@@ -133,25 +123,3 @@ if ("Notification" in window && "serviceWorker" in navigator) {
     }
   });
 }
-
-// Init Framework7-Vue Plugin
-Framework7.use(Framework7Vue);
-
-// Init App
-const app = createApp(App);
-
-// Register Framework7 Vue components
-registerComponents(app);
-
-// Router
-app.use(router);
-
-// Mount the app
-app.mount("#app");
-
-// Inicia notificações push após a montagem e validação do token
-router.afterEach((to) => {
-  if (to.meta.requiresAuth) {
-    initializePushNotifications();
-  }
-});
