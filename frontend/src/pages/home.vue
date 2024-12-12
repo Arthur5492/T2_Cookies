@@ -1,17 +1,18 @@
 <template>
   <f7-page name="home" class="home-page-background">
+
     <!-- Top Navbar -->
     <f7-navbar large :sliding="false">
-      <f7-nav-left>
+      <f7-nav-right>
         <f7-block>
-          <f7-button fill popup-open="#my-popup">
+          <f7-button class="popup-style" popup-open="#my-popup">
             ?
           </f7-button>
         </f7-block>
-      </f7-nav-left>
+      </f7-nav-right>
 
       <f7-nav-title sliding>Cookies Giveaway</f7-nav-title>
-      <f7-nav-title-large class="title-page">Cookies Giveaway</f7-nav-title-large>
+      <f7-nav-title-large>Cookies Giveaway</f7-nav-title-large>
     </f7-navbar>
 
     <div class="home-page-content">
@@ -35,26 +36,20 @@
     </div>
 
     <!-- Popup -->
-    <div class="popup popup-right" id="my-popup">
-      <div class="view">
-        <div class="page">
-          <div class="navbar">
-            <div class="navbar-bg"></div>
-            <div class="navbar-inner">
-              <div class="title">Popup</div>
-              <div class="right">
-                <a href="#" class="link popup-close">Close</a>
-              </div>
-            </div>
-          </div>
-          <div class="page-content">
-            <div class="block">
-              <p>Scan your cookie QR Code to participate</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <f7-popup id="my-popup">
+      <f7-view>
+        <f7-page>
+          <f7-navbar title="Popup">
+            <f7-nav-right>
+              <f7-link popup-close>Close</f7-link>
+            </f7-nav-right>
+          </f7-navbar>
+          <f7-block>
+            <p>Popup content goes here.</p>
+          </f7-block>
+        </f7-page>
+      </f7-view>
+    </f7-popup>
 
   </f7-page>
 </template>
@@ -108,6 +103,11 @@
 .icon {
   width: 40px;
   height: 40px;
+}
+
+.popup-style {
+  background-color: #9b5a28;
+  color: white;
 }
 
 .options-list {

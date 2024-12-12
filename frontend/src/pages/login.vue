@@ -41,7 +41,7 @@
 }
 
 .login-title {
-  color: #46392f;
+  color: #312115;
   font-size: 35px;
 }
 
@@ -55,7 +55,7 @@
 
 .login-container {
   background: rgba(255, 255, 255, 0.95); /* Fundo translúcido */
-  padding: 40px 30px; /* Mais espaço interno pra destacar o conteúdo */
+  padding: 10px 10px; /* Mais espaço interno pra destacar o conteúdo */
   border-radius: 15px; /* Bordas mais suaves */
   text-align: center;
   box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.7); /* Sombra mais definida */
@@ -64,7 +64,7 @@
 .button-class {
   display: flex;
   align-items: center;
-  background-color: #b67747;
+  background-color: #312115;
   color: white;
   margin-bottom: 10px;
   border-radius: 15px;
