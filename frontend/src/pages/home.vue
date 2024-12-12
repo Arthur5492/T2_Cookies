@@ -16,6 +16,7 @@
     </f7-navbar>
 
     <div class="home-page-content">
+
       <!-- QR Code Button -->
       <div class="qr-button-container">
         <f7-link href="/qr-code/" class="qr-button">
@@ -95,7 +96,7 @@
   justify-content: space-between;
   text-decoration: none;
   color: #fff;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: bold;
   gap: 10px;
 }
@@ -129,5 +130,4 @@
   z-index: 1000;
 }
 </style>
-
 
